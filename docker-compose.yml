@@ -1,0 +1,27 @@
+# Stack local opcional.  Uso:
+#   1) cp .env.example .env   (poner EE_PROJECT)
+#   2) earthengine authenticate   (en tu máquina; el contenedor reutiliza esas credenciales en solo lectura)
+#   3) docker compose up --build
+# Frontend: http://localhost:5173    Backend: http://localhost:8000/docs
+services:
+  backend:
+    build: ./backend
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      # Credenciales que dejó `earthengine authenticate` (solo lectura). Sin llaves JSON en el repo.
+      - ${USERPROFILE:-${HOME}}/.config/earthengine:/root/.config/earthengine:ro
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8000
+        VITE_LANDAI_CONTACT_URL: ${VITE_LANDAI_CONTACT_URL:-}
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
